@@ -3,35 +3,34 @@ package advent01
 import (
 	"advent2024/util"
 	"advent2024/util/mathutil"
+	"slices"
+	"strconv"
+	"strings"
 )
 
 func Solution(inputFile string) (part1, part2 interface{}) {
-	elves := parseElves(inputFile)
+	lines := util.ReadFile(inputFile)
 
-	top := []int{0, 0, 0} // descending order
+	var lefts []int
+	var rights []int
 
-	for _, elf := range elves {
-		v := mathutil.SumInts(elf)
-		for i, t := range top {
-			if v > t {
-				// shift remaining elements
-				for j := len(top) - 1; j > i; j-- {
-					top[j] = top[j-1]
-				}
-				// replace element
-				top[i] = v
-				break
-			}
+	for _, line := range lines {
+		if len(line) == 0 {
+			continue
 		}
+		parts := strings.Split(line, "   ")
+		left, _ := strconv.Atoi(parts[0])
+		right, _ := strconv.Atoi(parts[1])
+		lefts = append(lefts, left)
+		rights = append(rights, right)
 	}
-	return top[0], mathutil.SumInts(top)
-}
 
-func parseElves(inputFile string) [][]int {
-	elfLines := util.ReadFileSplitBy(inputFile, "\n\n")
-	res := make([][]int, len(elfLines))
-	for i, line := range elfLines {
-		res[i] = util.ParseIntList(line, "\n")
+	slices.Sort(lefts)
+	slices.Sort(rights)
+
+	totalDiff := 0
+	for i := range lefts {
+		totalDiff += mathutil.AbsInt(lefts[i] - rights[i])
 	}
-	return res
+	return totalDiff, nil
 }
