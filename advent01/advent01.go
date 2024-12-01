@@ -32,5 +32,18 @@ func Solution(inputFile string) (part1, part2 interface{}) {
 	for i := range lefts {
 		totalDiff += mathutil.AbsInt(lefts[i] - rights[i])
 	}
-	return totalDiff, nil
+
+	// part 2
+	rightCounts := make(map[int]int)
+	for _, n := range rights {
+		c := rightCounts[n]
+		rightCounts[n] = c + 1
+	}
+
+	similarityScore := 0
+	for _, n := range lefts {
+		similarityScore += n * rightCounts[n]
+	}
+
+	return totalDiff, similarityScore
 }
