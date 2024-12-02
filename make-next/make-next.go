@@ -59,14 +59,14 @@ func getExistingMax() int {
 }
 
 func replacePackage(fileName, packageName string) {
-	b, err := ioutil.ReadFile(fileName)
+	b, err := os.ReadFile(fileName)
 	util.Panic(err)
 
 	lines := strings.Split(string(b), "\n")
 	lines[0] = "package " + packageName
 	output := strings.Join(lines, "\n")
 
-	err = ioutil.WriteFile(fileName, []byte(output), 0644)
+	err = os.WriteFile(fileName, []byte(output), 0644)
 	util.Panic(err)
 }
 
