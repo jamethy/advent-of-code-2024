@@ -14,12 +14,17 @@ func TestSolution(t *testing.T) {
 		{
 			name:      "sample",
 			wantPart1: 161,
-			wantPart2: 0,
+			wantPart2: 161,
+		},
+		{
+			name:      "sample-2",
+			wantPart1: 161,
+			wantPart2: 48,
 		},
 		{
 			name:      "input",
 			wantPart1: 157621318,
-			wantPart2: 0,
+			wantPart2: 79845780,
 		},
 	}
 	for _, tt := range tests {
