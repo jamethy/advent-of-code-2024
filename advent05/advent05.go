@@ -15,9 +15,7 @@ func Solution(inputFile string) (part1, part2 any) {
 
 	// rule: left should be before right
 	// rules: for each right, all numbers that should be before
-	// reverseRules: for each left, all numbers that should be after
 	rules := make(map[int]set.Set[int])
-	reverseRules := make(map[int]set.Set[int])
 	for _, line := range ruleLines {
 		nums := util.StringsToInts(strings.Split(line, "|"))
 		s, ok := rules[nums[1]]
@@ -26,13 +24,6 @@ func Solution(inputFile string) (part1, part2 any) {
 		}
 		s.Add(nums[0])
 		rules[nums[1]] = s
-
-		s, ok = reverseRules[nums[0]]
-		if !ok {
-			s = set.NewSet[int]()
-		}
-		s.Add(nums[0])
-		reverseRules[nums[1]] = s
 	}
 
 	part1MedianSum := 0
@@ -50,12 +41,6 @@ func Solution(inputFile string) (part1, part2 any) {
 			}
 			if s, ok := rules[nj]; ok && s.Has(ni) {
 				return true
-			}
-			if s, ok := reverseRules[ni]; ok && s.Has(nj) {
-				return true
-			}
-			if s, ok := reverseRules[nj]; ok && s.Has(ni) {
-				return false
 			}
 			fmt.Println("should not see this. fingers crossed.")
 			return false
