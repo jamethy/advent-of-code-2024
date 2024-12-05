@@ -6,15 +6,15 @@ import (
 )
 
 var xmasRgx = regexp.MustCompile("(XMAS|SAMX)")
+var masRgx = regexp.MustCompile("(MAS|SAM)")
 
 func Solution(inputFile string) (part1, part2 any) {
-	// horizontal, vertical, diagonal, written backwards
-	//lines := util.ReadFile(inputFile)
 	grid := getGrid(inputFile)
 
-	total := 0
+	part1Total := 0
+	part2Total := 0
 	for _, line := range grid {
-		total += countInLine(line)
+		part1Total += countInLine(line)
 	}
 
 	for i := range grid {
@@ -22,13 +22,21 @@ func Solution(inputFile string) (part1, part2 any) {
 			if i < len(grid)-3 && j < len(grid[0])-3 {
 				word := []byte{grid[i][j], grid[i+1][j+1], grid[i+2][j+2], grid[i+3][j+3]}
 				if xmasRgx.Match(word) {
-					total++
+					part1Total++
 				}
 			}
 			if i < len(grid)-3 && j >= 3 {
 				word := []byte{grid[i][j], grid[i+1][j-1], grid[i+2][j-2], grid[i+3][j-3]}
 				if xmasRgx.Match(word) {
-					total++
+					part1Total++
+				}
+			}
+
+			if grid[i][j] == 'A' && i > 0 && j > 0 && i < len(grid)-1 && j < len(grid[0])-1 {
+				downRight := masRgx.Match([]byte{grid[i-1][j-1], grid[i][j], grid[i+1][j+1]})
+				upRight := masRgx.Match([]byte{grid[i+1][j-1], grid[i][j], grid[i-1][j+1]})
+				if downRight && upRight {
+					part2Total++
 				}
 			}
 		}
@@ -36,10 +44,10 @@ func Solution(inputFile string) (part1, part2 any) {
 
 	grid = rotateGrid90(grid)
 	for _, line := range grid {
-		total += countInLine(line)
+		part1Total += countInLine(line)
 	}
 
-	return total, 0
+	return part1Total, part2Total
 }
 
 func getGrid(inputFile string) [][]byte {

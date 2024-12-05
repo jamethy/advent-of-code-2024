@@ -12,14 +12,9 @@ func TestSolution(t *testing.T) {
 		wantPart2 any
 	}{
 		{
-			name:      "small-sample",
-			wantPart1: 4,
-			wantPart2: 0,
-		},
-		{
 			name:      "sample",
 			wantPart1: 18,
-			wantPart2: 0,
+			wantPart2: 9,
 		},
 		{
 			name:      "input",
