@@ -2,6 +2,7 @@ package advent06
 
 import (
 	"advent2024/util"
+	"advent2024/util/set"
 	"fmt"
 )
 
@@ -33,7 +34,31 @@ func Solution(inputFile string) (part1, part2 any) {
 		}
 	}
 
-	visited := make(map[int]map[int]struct{})
+	visited, _ := calculate(grid, gi, gj, gdi, gdj)
+	part1 = len(visited)
+	delete(visited, Point{i: gi, j: gj})
+
+	part2Count := 0
+	for point := range visited {
+		i, j := point.i, point.j
+		grid[i][j] = true
+		_, isLoop := calculate(grid, gi, gj, gdi, gdj)
+		if isLoop {
+			fmt.Printf("Loop if placed at %d, %d", i, j)
+			part2Count++
+		}
+		grid[i][j] = false
+	}
+
+	return part1, part2Count
+}
+
+type Point struct {
+	i, j int
+}
+
+func calculate(grid [][]bool, gi, gj, gdi, gdj int) (map[Point]set.Set[Point], bool) {
+	visited := make(map[Point]set.Set[Point], len(grid)*len(grid[0]))
 	for {
 		i, j := gi+gdi, gj+gdj
 		if i < 0 || i >= len(grid) || j < 0 || j >= len(grid[0]) {
@@ -41,21 +66,24 @@ func Solution(inputFile string) (part1, part2 any) {
 		}
 		if !grid[i][j] {
 			gi, gj = i, j
-			if v, ok := visited[i]; !ok {
-				visited[i] = map[int]struct{}{j: {}}
-			} else {
-				v[j] = struct{}{}
+
+			p := Point{i: i, j: j}
+			v := visited[p]
+			if v == nil {
+				v = set.NewSet[Point]()
 			}
+
+			d := Point{i: gdi, j: gdj}
+			if v.Has(d) {
+				return visited, true
+			}
+			v.Add(d)
+			visited[p] = v
+
 		} else {
 			gdi, gdj = gdj, -gdi
-			fmt.Printf("turning right at %d, %d\n", gi, gj)
 		}
 	}
 
-	visitCount := 0
-	for _, v := range visited {
-		visitCount += len(v)
-	}
-
-	return visitCount, 0
+	return visited, false
 }
