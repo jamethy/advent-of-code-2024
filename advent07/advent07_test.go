@@ -15,12 +15,12 @@ func TestSolution(t *testing.T) {
 		{
 			name:      "sample",
 			wantPart1: uint64(3749),
-			wantPart2: 0,
+			wantPart2: uint64(11387),
 		},
 		{
 			name:      "input",
 			wantPart1: uint64(12839601725877),
-			wantPart2: 0,
+			wantPart2: uint64(149956401519484),
 		},
 	}
 	for _, tt := range tests {
@@ -76,7 +76,7 @@ func TestTestValues(t *testing.T) {
 	//292: 11 6 16 20
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("line %d", i), func(t *testing.T) {
-			if got := TestValues(tt.testValue, tt.values); got != tt.want {
+			if got := TestValues(tt.testValue, tt.values, false); got != tt.want {
 				t.Errorf("TestValues() = %v, want %v", got, tt.want)
 			}
 		})
