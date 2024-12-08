@@ -20,7 +20,8 @@ func Solution(inputFile string) (part1, part2 any) {
 		}
 	}
 
-	uniquePoints := set.NewSet[Point]()
+	part1Points := set.NewSet[Point]()
+	part2Points := set.NewSet[Point]()
 	for _, points := range runePoints {
 		for _, a := range points {
 			for _, b := range points {
@@ -31,17 +32,28 @@ func Solution(inputFile string) (part1, part2 any) {
 
 				p := a.plus(diff)
 				if p.within(maxX, maxY) {
-					uniquePoints.Add(p)
+					part1Points.Add(p)
 				}
+				for p.plus(diff).within(maxX, maxY) {
+					p = p.plus(diff)
+					part2Points.Add(p)
+				}
+
 				p = b.minus(diff)
 				if p.within(maxX, maxY) {
-					uniquePoints.Add(p)
+					part1Points.Add(p)
+					part2Points.Add(p)
 				}
+				for p.minus(diff).within(maxX, maxY) {
+					p = p.minus(diff)
+					part2Points.Add(p)
+				}
+				part2Points.Add(a)
 			}
 		}
 	}
 
-	return len(uniquePoints), 0
+	return len(part1Points), len(part2Points)
 }
 
 type Point struct {
