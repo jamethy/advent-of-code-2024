@@ -28,6 +28,19 @@ func ParseIntList(str, sep string) []int {
 	return StringsToInts(parts)
 }
 
+func IntsToStrings(ints []int) []string {
+	str := make([]string, len(ints))
+	for i, n := range ints {
+		str[i] = strconv.Itoa(n)
+	}
+	return str
+}
+
+func IntsToString(ints []int, sep string) string {
+	strs := IntsToStrings(ints)
+	return strings.Join(strs, sep)
+}
+
 func ReadFile(name string) []string {
 	lines := ReadFileSplitBy(name, "\n")
 	if lines[len(lines)-1] == "" {
