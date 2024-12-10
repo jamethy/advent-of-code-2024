@@ -14,18 +14,19 @@ func Solution(inputFile string) (part1, part2 any) {
 	}
 
 	part1Score := 0
+	part2Score := 0
 	for i, line := range grid {
 		for j := range line {
 			if grid[i][j] != 0 {
 				continue
 			}
 			nines := set.NewSet[Point]()
-			collectNines(grid, i, j, nines)
+			part2Score += collectNines(grid, i, j, nines)
 			part1Score += len(nines)
 		}
 	}
 
-	return part1Score, 0
+	return part1Score, part2Score
 }
 
 var directions = [][]int{
@@ -39,21 +40,23 @@ type Point struct {
 	i, j int
 }
 
-func collectNines(grid [][]int, i, j int, res set.Set[Point]) {
+func collectNines(grid [][]int, i, j int, res set.Set[Point]) int {
 	v := grid[i][j]
 
 	if v == 9 {
 		res.Add(Point{i: i, j: j})
-		return
+		return 1
 	}
 
+	totalUniqueTrails := 0
 	for _, d := range directions {
 		ni, nj := i+d[0], j+d[1]
 		if ni < 0 || nj < 0 || ni >= len(grid) || nj >= len(grid[0]) {
 			continue
 		}
 		if grid[ni][nj] == v+1 {
-			collectNines(grid, ni, nj, res)
+			totalUniqueTrails += collectNines(grid, ni, nj, res)
 		}
 	}
+	return totalUniqueTrails
 }
