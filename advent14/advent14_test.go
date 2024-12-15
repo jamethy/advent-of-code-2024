@@ -19,7 +19,7 @@ func TestSolution(t *testing.T) {
 		{
 			name:      "input",
 			wantPart1: 215987200,
-			wantPart2: 0,
+			wantPart2: 8050,
 		},
 	}
 	for _, tt := range tests {
