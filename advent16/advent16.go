@@ -2,6 +2,7 @@ package advent16
 
 import (
 	"advent2024/util"
+	"advent2024/util/set"
 	"bytes"
 	"fmt"
 	"strconv"
@@ -15,7 +16,26 @@ var directions = [][]int{
 	{-1, 0},
 }
 
+type Point struct {
+	i, j int
+}
+
+type Path struct {
+	Points set.Set[Point]
+	Score  int
+}
+
+func (p Path) Clone() Path {
+	return Path{
+		Points: p.Points.Clone(),
+		Score:  p.Score,
+	}
+}
+
+var bestScore = -1
+
 func Solution(inputFile string) (part1, part2 any) {
+	bestScore = -1
 	grid := util.ReadFileAsByteGrid(inputFile)
 
 	scoreGrid := make([][]int, len(grid))
@@ -24,19 +44,42 @@ func Solution(inputFile string) (part1, part2 any) {
 	}
 
 	i, j := findTile(grid, 'S')
-	scoreGrid[i][j] = 1 // so I don't have to initialize entire grid
-	stepCount := 0
-	move(grid, scoreGrid, i, j, 0, stepCount)
+	paths := move(grid, scoreGrid, i, j, 0, Path{
+		Points: set.NewSet(Point{i: i, j: j}),
+		Score:  0,
+	})
 
-	eI, eJ := findTile(grid, 'E')
-	part1 = scoreGrid[eI][eJ] - 1
+	//bestScore = paths[0].Score
+	//for _, p := range paths {
+	//	if p.Score < bestScore {
+	//		bestScore = p.Score
+	//	}
+	//}
+	//
+	potentialSeats := set.NewSet[Point]()
+	for _, path := range paths {
+		if path.Score != bestScore {
+			continue
+		}
+		potentialSeats.AddAll(path.Points)
+	}
 
 	//printScoreGrid(grid, scoreGrid)
 
-	return part1, 0
+	for seat := range potentialSeats {
+		grid[seat.i][seat.j] = 'O'
+	}
+	for _, line := range grid {
+		fmt.Println(string(line))
+	}
+	fmt.Println()
+
+	return bestScore, len(potentialSeats)
 }
 
-func move(grid [][]byte, scoreGrid [][]int, i, j, dirIdx int, stepCount int) {
+func move(grid [][]byte, scoreGrid [][]int, i, j, dirIdx int, path Path) []Path {
+	var paths []Path
+
 	for dirChange := 0; dirChange < 4; dirChange++ {
 		nDirIdx := (dirIdx + dirChange) % 4
 		dir := directions[nDirIdx]
@@ -60,12 +103,35 @@ func move(grid [][]byte, scoreGrid [][]int, i, j, dirIdx int, stepCount int) {
 			rotationCost = 2000
 		}
 
-		potentialScore := scoreGrid[i][j] + rotationCost + 1
-		if scoreGrid[ni][nj] == 0 || scoreGrid[ni][nj] >= potentialScore {
-			scoreGrid[ni][nj] = potentialScore
-			move(grid, scoreGrid, ni, nj, nDirIdx, stepCount+1)
+		nextPoint := Point{i: ni, j: nj}
+		nextScore := path.Score + rotationCost + 1
+		if scoreGrid[ni][nj] == 0 || nextScore < scoreGrid[ni][nj] {
+			scoreGrid[ni][nj] = nextScore
+		} else if scoreGrid[ni][nj] != 0 && nextScore-2000 > scoreGrid[ni][nj] {
+			continue
+		}
+
+		if !path.Points.Has(nextPoint) {
+			newPath := path.Clone()
+			newPath.Points.Add(nextPoint)
+			newPath.Score = nextScore
+
+			if bestScore > 0 && newPath.Score > bestScore {
+				continue
+			}
+
+			if grid[ni][nj] == 'E' {
+				bestScore = newPath.Score
+				return []Path{newPath}
+			}
+
+			movePaths := move(grid, scoreGrid, ni, nj, nDirIdx, newPath)
+			if len(movePaths) > 0 {
+				paths = append(paths, movePaths...)
+			}
 		}
 	}
+	return paths
 }
 
 func findTile(grid [][]byte, c byte) (int, int) {
