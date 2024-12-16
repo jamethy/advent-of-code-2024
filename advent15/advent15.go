@@ -81,12 +81,10 @@ func part2Solution(inputFile string) int {
 
 	originalGrid := bytes.Split([]byte(parts[0]), []byte("\n"))
 	directions := strings.ReplaceAll(parts[1], "\n", "")
-	_ = directions
 
 	grid := make([][]byte, len(originalGrid))
 
 	rI, rJ := 0, 0
-	_, _ = rI, rJ
 	for i, line := range originalGrid {
 		grid[i] = make([]byte, 2*len(originalGrid[0]))
 		for j, c := range line {
@@ -109,17 +107,27 @@ func part2Solution(inputFile string) int {
 			}
 		}
 	}
-	//for _, line := range grid {
-	//	fmt.Println(string(line))
-	//}
-	//
+	for _, line := range grid {
+		fmt.Println(string(line))
+	}
+
 	for _, dir := range directions {
-		fn := makePart2MoveFunc(grid, rI, rJ, dir)
+		//if idx == 1092 {
+		//	for _, line := range grid {
+		//		fmt.Println(string(line))
+		//	}
+		//}
+		fn := makePart2MoveFunc(grid, rI, rJ, dir, false)
 		if fn != nil {
 			fn()
 			di, dj := dirFromRune(dir)
 			rI, rJ = rI+di, rJ+dj
+			//validate(grid, idx)
 		}
+
+		//for _, line := range grid {
+		//	fmt.Println(string(line))
+		//}
 
 		//fmt.Println("\nMove " + string(dir) + ":")
 		//for _, line := range grid {
@@ -128,9 +136,9 @@ func part2Solution(inputFile string) int {
 		//time.Sleep(10 * time.Second)
 	}
 
-	for _, line := range grid {
-		fmt.Println(string(line))
-	}
+	//for _, line := range grid {
+	//	fmt.Println(string(line))
+	//}
 
 	part2Sum := 0
 	for i, line := range grid {
@@ -143,6 +151,17 @@ func part2Solution(inputFile string) int {
 	}
 
 	return part2Sum
+}
+
+func validate(grid [][]byte, idx int) {
+	for _, line := range grid {
+		if bytes.Contains(line, []byte("[.")) {
+			panic(fmt.Sprintf("panic %d", idx))
+		}
+		if bytes.Contains(line, []byte("[@")) {
+			panic(fmt.Sprintf("panic %d", idx))
+		}
+	}
 }
 
 func dirFromRune(r rune) (int, int) {
@@ -160,7 +179,7 @@ func dirFromRune(r rune) (int, int) {
 	}
 }
 
-func makePart2MoveFunc(grid [][]byte, i, j int, dir rune) func() {
+func makePart2MoveFunc(grid [][]byte, i, j int, dir rune, skipPushRight bool) func() {
 	if grid[i][j] == '#' {
 		return nil
 	}
@@ -169,10 +188,10 @@ func makePart2MoveFunc(grid [][]byte, i, j int, dir rune) func() {
 	}
 
 	di, dj := dirFromRune(dir)
+	ni, nj := i+di, j+dj
 
 	if grid[i][j] == '@' {
-		ni, nj := i+di, j+dj
-		prev := makePart2MoveFunc(grid, ni, nj, dir)
+		prev := makePart2MoveFunc(grid, ni, nj, dir, false)
 		if prev == nil {
 			return nil
 		}
@@ -184,12 +203,12 @@ func makePart2MoveFunc(grid [][]byte, i, j int, dir rune) func() {
 	}
 	if grid[i][j] == ']' {
 		j--
+		nj--
 	}
 
 	switch dir {
 	case '<':
-		ni, nj := i+di, j+dj
-		prev := makePart2MoveFunc(grid, ni, nj, dir)
+		prev := makePart2MoveFunc(grid, ni, nj, dir, false)
 		if prev == nil {
 			return nil
 		}
@@ -200,8 +219,7 @@ func makePart2MoveFunc(grid [][]byte, i, j int, dir rune) func() {
 			grid[i][j+1] = '.'
 		}
 	case '>':
-		ni, nj := i+di, j+dj
-		prev := makePart2MoveFunc(grid, ni, nj+1, dir)
+		prev := makePart2MoveFunc(grid, ni, nj+1, dir, false)
 		if prev == nil {
 			return nil
 		}
@@ -212,20 +230,25 @@ func makePart2MoveFunc(grid [][]byte, i, j int, dir rune) func() {
 			grid[i][nj+1] = ']'
 		}
 	case '^', 'v':
-		ni := i + di
-		leftPrev := makePart2MoveFunc(grid, ni, j, dir)
-		if leftPrev == nil {
-			return nil
-		}
-		rightPrev := makePart2MoveFunc(grid, ni, j+1, dir)
+
+		rightPrev := makePart2MoveFunc(grid, ni, nj+1, dir, false)
 		if rightPrev == nil {
 			return nil
 		}
+
+		shouldSkipPushRight := grid[ni][nj] == ']' && grid[ni][nj+1] == '['
+		leftPrev := makePart2MoveFunc(grid, ni, nj, dir, shouldSkipPushRight)
+		if leftPrev == nil {
+			return nil
+		}
+
 		return func() {
+			if !skipPushRight {
+				rightPrev()
+			}
 			leftPrev()
-			rightPrev()
-			grid[ni][j] = '['
-			grid[ni][j+1] = ']'
+			grid[ni][nj] = '['
+			grid[ni][nj+1] = ']'
 			grid[i][j] = '.'
 			grid[i][j+1] = '.'
 		}
