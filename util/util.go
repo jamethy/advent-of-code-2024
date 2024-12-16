@@ -1,6 +1,7 @@
 package util
 
 import (
+	"bytes"
 	"io"
 	"os"
 	"strconv"
@@ -47,6 +48,15 @@ func ReadFile(name string) []string {
 		lines = lines[:len(lines)-1]
 	}
 	return lines
+}
+
+func ReadFileAsByteGrid(name string) [][]byte {
+	full := []byte(ReadFileAsString(name))
+	grid := bytes.Split(full, []byte("\n"))
+	if len(grid[len(grid)-1]) == 0 {
+		grid = grid[:len(grid)-1]
+	}
+	return grid
 }
 
 func ReadFileAsString(name string) string {
