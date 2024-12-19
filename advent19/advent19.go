@@ -17,22 +17,30 @@ func Solution(inputFile string) (part1, part2 any) {
 	designs := strings.Split(parts[1], "\n")
 
 	possibleDesigns := 0
+	possibleDesignOptions := 0
 	for _, design := range designs {
-		if designer.isDesignPossible(design) {
+		c := designer.possibleDesignCount(design)
+		if c != 0 {
 			possibleDesigns++
+			possibleDesignOptions += c
 		}
 	}
 
-	return possibleDesigns, 0
+	return possibleDesigns, possibleDesignOptions
 }
 
-func (d Designer) isDesignPossible(design string) bool {
-	if len(design) == 0 || d.patterns.Has(design) {
-		return true
+func (d Designer) possibleDesignCount(design string) int {
+	if len(design) == 0 {
+		return 1
 	}
 	if len(design) < d.minLength {
-		return false
+		return 0
 	}
+	if cached, ok := d.countCache[design]; ok {
+		return cached
+	}
+
+	possibilities := 0
 	maxSubDesignLength := mathutil.MinInt(d.maxLength, len(design))
 	for l := d.minLength; l <= maxSubDesignLength; l++ {
 		subDesign := design[0:l]
@@ -40,15 +48,15 @@ func (d Designer) isDesignPossible(design string) bool {
 			continue
 		}
 		remainingDesign := design[l:]
-		if d.isDesignPossible(remainingDesign) {
-			return true
-		}
+		possibilities += d.possibleDesignCount(remainingDesign)
 	}
-	return false
+	d.countCache[design] = possibilities
+	return possibilities
 }
 
 type Designer struct {
 	patterns             set.Set[string]
+	countCache           map[string]int
 	minLength, maxLength int
 }
 
@@ -61,8 +69,9 @@ func NewDesigner(patternSlice []string) Designer {
 		maxLength = mathutil.MaxInt(maxLength, len(pattern))
 	}
 	return Designer{
-		patterns:  patterns,
-		minLength: minLength,
-		maxLength: maxLength,
+		patterns:   patterns,
+		countCache: make(map[string]int, len(patterns)*1000),
+		minLength:  minLength,
+		maxLength:  maxLength,
 	}
 }
