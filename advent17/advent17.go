@@ -4,6 +4,7 @@ import (
 	"advent2024/util"
 	"advent2024/util/bitutil"
 	"advent2024/util/mathutil"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -16,13 +17,9 @@ type Computer struct {
 }
 
 func (c *Computer) Run() {
-	for c.Next() {
+	for c.InstructionPointer < uint(len(c.Program)) {
 		c.Step()
 	}
-}
-
-func (c *Computer) Next() bool {
-	return c.InstructionPointer < uint(len(c.Program))
 }
 
 func (c *Computer) Step() {
@@ -33,7 +30,7 @@ func (c *Computer) Step() {
 
 	switch opcode {
 	case 0: // adv
-		c.A = c.advValue(operand)
+		c.A = c.A / uint(mathutil.IntPow(2, int(c.ComboValue(operand))))
 	case 1: // bxl
 		c.B = bitutil.XOR(c.B, operand)
 	case 2: // bst
@@ -47,16 +44,10 @@ func (c *Computer) Step() {
 	case 5: // out
 		c.Output = append(c.Output, c.ComboValue(operand)%8)
 	case 6: // bdv
-		c.B = c.advValue(operand)
+		c.B = c.A / uint(mathutil.IntPow(2, int(c.ComboValue(operand))))
 	case 7: // cdv
-		c.C = c.advValue(operand)
+		c.C = c.A / uint(mathutil.IntPow(2, int(c.ComboValue(operand))))
 	}
-}
-
-func (c *Computer) advValue(operand uint) uint {
-	numerator := c.A
-	denominator := uint(mathutil.IntPow(2, int(c.ComboValue(operand))))
-	return numerator / denominator
 }
 
 func (c *Computer) ComboValue(v uint) uint {
@@ -74,14 +65,7 @@ func (c *Computer) ComboValue(v uint) uint {
 	}
 }
 
-func Solution(inputFile string) (part1, part2 any) {
-
-	c := parseComputer(inputFile)
-
-	for c.Next() {
-		c.Step()
-	}
-
+func (c *Computer) OutputString() string {
 	sb := strings.Builder{}
 	for i, n := range c.Output {
 		if i != 0 {
@@ -89,8 +73,39 @@ func Solution(inputFile string) (part1, part2 any) {
 		}
 		sb.WriteString(strconv.FormatUint(uint64(n), 10))
 	}
+	return sb.String()
+}
 
-	return sb.String(), 0
+func findPart2A(program []uint, want []uint, prev uint) (uint, bool) {
+	for a := uint(0); a < 8; a++ {
+		newA := 8*prev + a
+
+		sub := Computer{A: newA, Program: program}
+		sub.Run()
+
+		if !reflect.DeepEqual(sub.Output, want) {
+			continue
+		}
+		if len(program) == len(want) {
+			return newA, true
+		}
+
+		subA, ok := findPart2A(program, program[len(program)-len(want)-1:], newA)
+		if ok {
+			return subA, true
+		}
+	}
+	return 0, false
+}
+
+func Solution(inputFile string) (part1, part2 any) {
+
+	c := parseComputer(inputFile)
+	c.Run()
+	part1 = c.OutputString()
+	part2, _ = findPart2A(c.Program, []uint{0}, 0)
+
+	return part1, part2
 }
 
 func parseComputer(inputFile string) Computer {
