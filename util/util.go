@@ -96,3 +96,45 @@ func EqualIntSlice(a, b []int) bool {
 	}
 	return true
 }
+
+func LeftPad(str, c string, l int) string {
+	for len(str) < l {
+		str = c + str
+	}
+	return str
+}
+
+func IntGridToStringGrid(grid [][]int) [][]string {
+	largestNumber, mostNegativeNumber := 0, 0
+	for _, line := range grid {
+		for _, n := range line {
+			if n > largestNumber {
+				largestNumber = n
+			}
+			if n < mostNegativeNumber {
+				mostNegativeNumber = n
+			}
+		}
+	}
+
+	l := max(len(strconv.Itoa(largestNumber)), len(strconv.Itoa(mostNegativeNumber)))
+
+	strGrid := make([][]string, len(grid))
+	for i, line := range grid {
+		strLine := make([]string, len(line))
+		for j, n := range line {
+			negative := n < 0
+			if negative {
+				n = -n
+			}
+			nStr := strconv.Itoa(n)
+			nStr = LeftPad(nStr, "0", l)
+			if negative {
+				nStr = "-" + nStr[1:]
+			}
+			strLine[j] = nStr
+		}
+		strGrid[i] = strLine
+	}
+	return strGrid
+}
