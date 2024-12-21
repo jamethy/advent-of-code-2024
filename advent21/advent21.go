@@ -153,39 +153,25 @@ func transformTwoArrowKeys(a, b rune, transformer func(string) string) string {
 
 // v<
 
-func transformArrowKeys(input string, pos rune, depth int) string {
-	if input == "" {
-		return ""
-	}
+var cache = make(map[string]string)
+
+func transformOnce(input string, depth int) string {
+	input += "A"
 	if depth == 0 {
 		return input
 	}
 
-	//if c, ok := a.cached[input]; ok {
-	//	return c
-	//}
-	//if c, ok := a.cached[reverseString(input)]; ok {
-	//	return reverseString(c)
-	//}
+	pos := 'A'
+	str := ""
+	for _, newPos := range input {
+		c := transformTwoArrowKeys(pos, newPos, func(s string) string {
+			return transformOnce(s, depth-1)
+		})
+		str += c
+		pos = newPos
+	}
 
-	c := transformTwoArrowKeys(pos, rune(input[0]), func(s string) string {
-		return transformArrowKeys(s+"A", 'A', depth-1)
-	})
-	rest := transformArrowKeys(input[1:], rune(input[0]), depth)
-	c += rest
-	//ak.cached[input] = c
-
-	//c := ""
-	//
-	//for i, k := range input {
-	//	if i == 0 {
-	//		continue
-	//	}
-	//
-	//}
-	//
-	//a.cached[input] = c
-	return c
+	return str
 }
 
 func sequenceLength(line string, depth int) int {
@@ -197,7 +183,8 @@ func sequenceLength(line string, depth int) int {
 		_ = moveString
 
 		mv := numpadMoves(numPadPos, newPos, func(s string) string {
-			return transformArrowKeys(s+"A", 'A', depth)
+			//return transformArrowKeys(s+"A", 'A', depth)
+			return transformOnce(s, depth)
 		})
 		numPadPos = newPos
 		seq += mv
@@ -208,16 +195,18 @@ func sequenceLength(line string, depth int) int {
 func Solution(inputFile string) (part1, part2 any) {
 	lines := util.ReadFile(inputFile)
 
-	part1Complexity := 0
+	part1Complexity, part2Complexity := 0, 0
 	for _, line := range lines {
 		depthOf2 := sequenceLength(line, 2)
+		//depthOf25 := sequenceLength(line, 25)
 
 		num, _ := strconv.Atoi(line[:len(line)-1])
 		fmt.Printf("%s: %d * %d\n", line, depthOf2, num)
 		part1Complexity += depthOf2 * num
+		//part2Complexity += depthOf25 * num
 	}
 
-	return part1Complexity, 0
+	return part1Complexity, part2Complexity
 }
 
 func reverseString(str string) string {
