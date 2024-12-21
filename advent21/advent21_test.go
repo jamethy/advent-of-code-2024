@@ -67,7 +67,7 @@ func TestSequenceLength(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			res := sequenceLength(tt.input)
+			res := sequenceLength(tt.input, 2)
 			if res != tt.want {
 				t.Errorf("sequenceLength got = %v, want %v", res, tt.want)
 			}

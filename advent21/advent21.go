@@ -153,9 +153,12 @@ func transformTwoArrowKeys(a, b rune, transformer func(string) string) string {
 
 // v<
 
-func transformArrowKeys(input string, pos rune, transformer func(string) string) string {
+func transformArrowKeys(input string, pos rune, depth int) string {
 	if input == "" {
 		return ""
+	}
+	if depth == 0 {
+		return input
 	}
 
 	//if c, ok := a.cached[input]; ok {
@@ -165,8 +168,10 @@ func transformArrowKeys(input string, pos rune, transformer func(string) string)
 	//	return reverseString(c)
 	//}
 
-	c := transformTwoArrowKeys(pos, rune(input[0]), transformer)
-	rest := transformArrowKeys(input[1:], rune(input[0]), transformer)
+	c := transformTwoArrowKeys(pos, rune(input[0]), func(s string) string {
+		return transformArrowKeys(s+"A", 'A', depth-1)
+	})
+	rest := transformArrowKeys(input[1:], rune(input[0]), depth)
 	c += rest
 	//ak.cached[input] = c
 
@@ -183,7 +188,7 @@ func transformArrowKeys(input string, pos rune, transformer func(string) string)
 	return c
 }
 
-func sequenceLength(line string) int {
+func sequenceLength(line string, depth int) int {
 	seq := ""
 	numPadPos := 'A'
 	for _, newPos := range line {
@@ -192,11 +197,7 @@ func sequenceLength(line string) int {
 		_ = moveString
 
 		mv := numpadMoves(numPadPos, newPos, func(s string) string {
-			return transformArrowKeys(s+"A", 'A', func(s string) string {
-				return transformArrowKeys(s+"A", 'A', func(s string) string {
-					return s + "A"
-				})
-			})
+			return transformArrowKeys(s+"A", 'A', depth)
 		})
 		numPadPos = newPos
 		seq += mv
@@ -209,11 +210,11 @@ func Solution(inputFile string) (part1, part2 any) {
 
 	part1Complexity := 0
 	for _, line := range lines {
-		l := sequenceLength(line)
+		depthOf2 := sequenceLength(line, 2)
 
 		num, _ := strconv.Atoi(line[:len(line)-1])
-		fmt.Printf("%s: %d * %d\n", line, l, num)
-		part1Complexity += l * num
+		fmt.Printf("%s: %d * %d\n", line, depthOf2, num)
+		part1Complexity += depthOf2 * num
 	}
 
 	return part1Complexity, 0
