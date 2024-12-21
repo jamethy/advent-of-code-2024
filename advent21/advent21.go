@@ -52,11 +52,19 @@ func numpadMoves(a, b rune, transformer func(string) string) string {
 		upDowns = strings.Repeat("v", mathutil.AbsInt(aLevel-bLevel))
 	}
 
-	if aLevel == 0 {
+	if len(upDowns) == 0 || len(leftRights) == 0 {
+		// doesn't matter which is better, they are the same
 		t := transformer(upDowns + leftRights)
 		return t
 	}
-	if aColumn == 0 {
+
+	if aLevel == 0 && bColumn == 0 {
+		// avoid going left into gap
+		t := transformer(upDowns + leftRights)
+		return t
+	}
+	if aColumn == 0 && bLevel == 0 {
+		// avoid going down into gap
 		t := transformer(leftRights + upDowns)
 		return t
 	}
@@ -69,33 +77,37 @@ func numpadMoves(a, b rune, transformer func(string) string) string {
 	return upDownsFirst
 }
 
-type ArrowKeys struct {
-	cached map[string]string
-}
-
 //     +---+---+
 //     | ^ | A |
 // +---+---+---+
 // | < | v | > |
 // +---+---+---+
 
-func (ak ArrowKeys) getLevelAndColumn(a rune) (int, int) {
+func getArrowKeysLevelAndColumn(a rune) (int, int) {
 	level, column := 0, 0
-	if strings.ContainsRune("^A", a) {
+
+	switch a {
+	case '^', 'A':
 		level = 1
+	default:
+		level = 0
 	}
-	if strings.ContainsRune("^v", a) {
-		column = 1
-	} else if strings.ContainsRune("A>", a) {
+
+	switch a {
+	case 'A', '>':
 		column = 2
+	case '^', 'v':
+		column = 1
+	default:
+		column = 0
 	}
 
 	return level, column
 }
 
-func (ak ArrowKeys) transformTwo(a, b rune, transformer func(string) string) string {
-	aLevel, aColumn := ak.getLevelAndColumn(a)
-	bLevel, bColumn := ak.getLevelAndColumn(b)
+func transformTwoArrowKeys(a, b rune, transformer func(string) string) string {
+	aLevel, aColumn := getArrowKeysLevelAndColumn(a)
+	bLevel, bColumn := getArrowKeysLevelAndColumn(b)
 
 	moveString := string(a) + " to " + string(b)
 	_ = moveString
@@ -115,13 +127,16 @@ func (ak ArrowKeys) transformTwo(a, b rune, transformer func(string) string) str
 	}
 
 	if len(upDowns) == 0 || len(leftRights) == 0 {
+		// doesn't matter, they are the same
 		return transformer(upDowns + leftRights)
 	}
 
-	if aLevel == 1 {
+	if aLevel == 1 && bColumn == 0 {
+		// avoid going left into gap
 		return transformer(upDowns + leftRights)
 	}
 	if aColumn == 0 {
+		// avoid going up into gap
 		return transformer(leftRights + upDowns)
 	}
 
@@ -138,7 +153,7 @@ func (ak ArrowKeys) transformTwo(a, b rune, transformer func(string) string) str
 
 // v<
 
-func (ak ArrowKeys) transform(input string, pos rune, transformer func(string) string) string {
+func transformArrowKeys(input string, pos rune, transformer func(string) string) string {
 	if input == "" {
 		return ""
 	}
@@ -150,10 +165,8 @@ func (ak ArrowKeys) transform(input string, pos rune, transformer func(string) s
 	//	return reverseString(c)
 	//}
 
-	c := ak.transformTwo(pos, rune(input[0]), transformer)
-	c += "A"
-
-	rest := ak.transform(input[1:], rune(input[0]), transformer)
+	c := transformTwoArrowKeys(pos, rune(input[0]), transformer)
+	rest := transformArrowKeys(input[1:], rune(input[0]), transformer)
 	c += rest
 	//ak.cached[input] = c
 
@@ -170,43 +183,37 @@ func (ak ArrowKeys) transform(input string, pos rune, transformer func(string) s
 	return c
 }
 
+func sequenceLength(line string) int {
+	seq := ""
+	numPadPos := 'A'
+	for _, newPos := range line {
+
+		moveString := string(numPadPos) + " to " + string(newPos)
+		_ = moveString
+
+		mv := numpadMoves(numPadPos, newPos, func(s string) string {
+			return transformArrowKeys(s+"A", 'A', func(s string) string {
+				return transformArrowKeys(s+"A", 'A', func(s string) string {
+					return s + "A"
+				})
+			})
+		})
+		numPadPos = newPos
+		seq += mv
+	}
+	return len(seq)
+}
+
 func Solution(inputFile string) (part1, part2 any) {
 	lines := util.ReadFile(inputFile)
 
-	ak := ArrowKeys{cached: make(map[string]string)}
-
 	part1Complexity := 0
 	for _, line := range lines {
-		seq := ""
-		numPadPos := 'A'
-		transformer1Pos := 'A'
-		//transformer2Pos := 'A'
-		//line = strings.Join(strings.Split(line, ""), "A")
-		for _, newPos := range line {
-
-			moveString := string(numPadPos) + " to " + string(newPos)
-			_ = moveString
-
-			mv := numpadMoves(numPadPos, newPos, func(s string) string {
-				return s
-			})
-			mv += "A"
-			mv = ak.transform(mv, transformer1Pos, func(s string) string {
-				return s
-			})
-			mv = ak.transform(mv, transformer1Pos, func(s string) string {
-				return s
-			})
-			numPadPos = newPos
-			seq += mv
-		}
-
-		//seq = ak.transform(seq, 'A')
-		//seq = ak.transform(seq, 'A')
+		l := sequenceLength(line)
 
 		num, _ := strconv.Atoi(line[:len(line)-1])
-		fmt.Printf("%s: %d * %d\n", line, len(seq), num)
-		part1Complexity += len(seq) * num
+		fmt.Printf("%s: %d * %d\n", line, l, num)
+		part1Complexity += l * num
 	}
 
 	return part1Complexity, 0

@@ -17,7 +17,11 @@ func TestSolution(t *testing.T) {
 		},
 		{
 			name:      "input",
-			wantPart1: 0, // 164230 too high
+			wantPart1: 163086,
+		},
+		{
+			name:      "reddit-1",
+			wantPart1: 151826,
 		},
 	}
 	for _, tt := range tests {
@@ -35,6 +39,42 @@ func TestSolution(t *testing.T) {
 	}
 }
 
+func TestSequenceLength(t *testing.T) {
+	tests := []struct {
+		input string
+		want  int
+	}{
+		{
+			input: "159A",
+			want:  82,
+		},
+		{
+			input: "375A",
+			want:  70,
+		},
+		{
+			input: "613A",
+			want:  62,
+		},
+		{
+			input: "894A",
+			want:  78,
+		},
+		{
+			input: "080A",
+			want:  60,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			res := sequenceLength(tt.input)
+			if res != tt.want {
+				t.Errorf("sequenceLength got = %v, want %v", res, tt.want)
+			}
+		})
+	}
+}
+
 func TestNumPad(t *testing.T) {
 	tests := []struct {
 		a    rune
@@ -44,7 +84,7 @@ func TestNumPad(t *testing.T) {
 		{
 			a:    'A',
 			b:    '8',
-			want: "^^^<",
+			want: "<^^^",
 		},
 		{
 			a:    'A',
