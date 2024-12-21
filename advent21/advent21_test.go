@@ -18,7 +18,7 @@ func TestSolution(t *testing.T) {
 		{
 			name:      "input",
 			wantPart1: 163086,
-			wantPart2: 0,
+			wantPart2: 198466286401228,
 		},
 		{
 			name:      "reddit-1",
@@ -71,44 +71,6 @@ func TestSequenceLength(t *testing.T) {
 			res := sequenceLength(tt.input, 2)
 			if res != tt.want {
 				t.Errorf("sequenceLength got = %v, want %v", res, tt.want)
-			}
-		})
-	}
-}
-
-func TestNumPad(t *testing.T) {
-	tests := []struct {
-		a    rune
-		b    rune
-		want string
-	}{
-		{
-			a:    'A',
-			b:    '8',
-			want: "<^^^",
-		},
-		{
-			a:    'A',
-			b:    '9',
-			want: "^^^",
-		},
-		{
-			a:    'A',
-			b:    '7',
-			want: "^^^<<",
-		},
-		{
-			a:    '7',
-			b:    'A',
-			want: ">>vvv",
-		},
-	}
-	for _, tt := range tests {
-		name := string(tt.a) + "-to-" + string(tt.b)
-		t.Run(name, func(t *testing.T) {
-			res := numpadMoves(tt.a, tt.b, stringIdentity)
-			if res != tt.want {
-				t.Errorf("NumPad got = %v, want %v", res, tt.want)
 			}
 		})
 	}

@@ -4,7 +4,6 @@ import (
 	"advent2024/util"
 	"advent2024/util/mathutil"
 	"fmt"
-	"slices"
 	"strconv"
 	"strings"
 )
@@ -19,7 +18,7 @@ import (
 //     | 0 | A |
 //     +---+---+
 
-func numpadMoves(a, b rune, transformer func(string) string) string {
+func numpadMoves(a, b rune, transformer func(string) int) int {
 	aN, _ := strconv.Atoi(string(a))
 	bN, _ := strconv.Atoi(string(b))
 
@@ -71,7 +70,7 @@ func numpadMoves(a, b rune, transformer func(string) string) string {
 
 	upDownsFirst := transformer(upDowns + leftRights)
 	leftRightsFirst := transformer(leftRights + upDowns)
-	if len(leftRightsFirst) <= len(upDownsFirst) {
+	if leftRightsFirst <= upDownsFirst {
 		return leftRightsFirst
 	}
 	return upDownsFirst
@@ -105,7 +104,7 @@ func getArrowKeysLevelAndColumn(a rune) (int, int) {
 	return level, column
 }
 
-func transformTwoArrowKeys(a, b rune, transformer func(string) string) string {
+func transformTwoArrowKeys(a, b rune, transformer func(string) int) int {
 	aLevel, aColumn := getArrowKeysLevelAndColumn(a)
 	bLevel, bColumn := getArrowKeysLevelAndColumn(b)
 
@@ -142,54 +141,63 @@ func transformTwoArrowKeys(a, b rune, transformer func(string) string) string {
 
 	upDownsFirst := transformer(upDowns + leftRights)
 	leftRightsFirst := transformer(leftRights + upDowns)
-	if len(leftRightsFirst) <= len(upDownsFirst) {
+	if leftRightsFirst <= upDownsFirst {
 		return leftRightsFirst
 	}
 	return upDownsFirst
 }
 
-// <A^A>^^AvvvA
-// A< -> v<<A
+type Key struct {
+	Input string
+	Depth int
+}
 
-// v<
+var cache = make(map[Key]int, 1000000)
 
-var cache = make(map[string]string)
-
-func transformOnce(input string, depth int) string {
+func transformArrowKeys(input string, depth int) int {
 	input += "A"
 	if depth == 0 {
-		return input
+		return len(input)
+	}
+
+	key := Key{
+		Input: input,
+		Depth: depth,
+	}
+	if cached, ok := cache[key]; ok {
+		return cached
 	}
 
 	pos := 'A'
-	str := ""
+	str := 0
 	for _, newPos := range input {
-		c := transformTwoArrowKeys(pos, newPos, func(s string) string {
-			return transformOnce(s, depth-1)
+		c := transformTwoArrowKeys(pos, newPos, func(s string) int {
+			return transformArrowKeys(s, depth-1)
 		})
 		str += c
 		pos = newPos
 	}
 
+	cache[key] = str
+
 	return str
 }
 
 func sequenceLength(line string, depth int) int {
-	seq := ""
+	seq := 0
 	numPadPos := 'A'
 	for _, newPos := range line {
 
 		moveString := string(numPadPos) + " to " + string(newPos)
 		_ = moveString
 
-		mv := numpadMoves(numPadPos, newPos, func(s string) string {
-			//return transformArrowKeys(s+"A", 'A', depth)
-			return transformOnce(s, depth)
+		mv := numpadMoves(numPadPos, newPos, func(s string) int {
+			return transformArrowKeys(s, depth)
 		})
 		numPadPos = newPos
 		seq += mv
 	}
-	return len(seq)
+	return seq
 }
 
 func Solution(inputFile string) (part1, part2 any) {
@@ -198,23 +206,13 @@ func Solution(inputFile string) (part1, part2 any) {
 	part1Complexity, part2Complexity := 0, 0
 	for _, line := range lines {
 		depthOf2 := sequenceLength(line, 2)
-		//depthOf25 := sequenceLength(line, 25)
+		depthOf25 := sequenceLength(line, 25)
 
 		num, _ := strconv.Atoi(line[:len(line)-1])
 		fmt.Printf("%s: %d * %d\n", line, depthOf2, num)
 		part1Complexity += depthOf2 * num
-		//part2Complexity += depthOf25 * num
+		part2Complexity += depthOf25 * num
 	}
 
 	return part1Complexity, part2Complexity
-}
-
-func reverseString(str string) string {
-	b := []byte(str)
-	slices.Reverse(b)
-	return string(b)
-}
-
-func stringIdentity(str string) string {
-	return str
 }
