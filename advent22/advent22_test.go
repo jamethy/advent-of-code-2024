@@ -8,16 +8,21 @@ import (
 func TestSolution(t *testing.T) {
 	tests := []struct {
 		name      string
-		wantPart1 uint
+		wantPart1 any
 		wantPart2 any
 	}{
 		{
 			name:      "sample",
-			wantPart1: 37327623,
+			wantPart1: uint(37327623),
+		},
+		{
+			name:      "sample-2",
+			wantPart2: 23,
 		},
 		{
 			name:      "input",
-			wantPart1: 14691757043,
+			wantPart1: uint(14691757043),
+			wantPart2: 1831,
 		},
 	}
 	for _, tt := range tests {
