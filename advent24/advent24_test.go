@@ -1,6 +1,7 @@
 package advent24
 
 import (
+	"advent2024/util/mathutil"
 	"reflect"
 	"testing"
 )
@@ -18,6 +19,7 @@ func TestSolution(t *testing.T) {
 		{
 			name:      "input",
 			wantPart1: uint(66055249060558),
+			wantPart2: "fcd,fhp,hmk,rvf,tpc,z16,z20,z33",
 		},
 	}
 	for _, tt := range tests {
@@ -33,4 +35,42 @@ func TestSolution(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCalculation(t *testing.T) {
+	nodes := parseNodes("input.txt")
+	zKeys := findZKeys(nodes)
+
+	swapNodes("z16", "hmk", nodes) // z16
+	swapNodes("z20", "fhp", nodes) // z20
+	swapNodes("tpc", "rvf", nodes) // z27
+	swapNodes("z33", "fcd", nodes) // z33
+
+	nodes["z15"].PrintInvolved()
+	nodes["z16"].PrintInvolved()
+	nodes["z45"].PrintInvolved()
+
+	m := mathutil.IntPow(2, 33)
+
+	x, y := uint(0), uint(m)
+	setInputs(x, y, nodes)
+	res := runCalculation(nodes, zKeys)
+	if res != x+y {
+		t.Errorf("Not equal: expected %v, got %v", x+y, res)
+	}
+}
+
+func FuzzCalculation(f *testing.F) {
+	nodes := parseNodes("input.txt")
+	zKeys := findZKeys(nodes)
+
+	f.Add(uint(0), uint(0))
+
+	f.Fuzz(func(t *testing.T, x, y uint) {
+		setInputs(x, y, nodes)
+		res := runCalculation(nodes, zKeys)
+		if res != x+y {
+			t.Errorf("Not equal: expected %v, got %v", x+y, res)
+		}
+	})
 }
